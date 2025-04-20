@@ -1,7 +1,8 @@
 const { SerialPort } = require('serialport');
 const { io } = require('socket.io-client');
-
-const socket = io('http://localhost:8081', { extraHeaders: { origin: 'controller-steppers' } });
+var cliport = process.env.CLI_PORT || 8080;
+var connectorsvc= process.env.CONNECTOR_SVC || "mm-ws-connector.mm-ws-connector.svc.cluster.local";
+const socket = io('http://' + connectorsvc + ':' + cliport, { extraHeaders: { origin: 'controller-steppers' } });
 
 socket.on('connect', () => {
     console.log('Connected to Socket.IO server');
