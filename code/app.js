@@ -1,7 +1,7 @@
 const { SerialPort } = require('serialport');
 const { io } = require('socket.io-client');
 
-const socket = io('http://localhost:8081', { query: { id: 'controller-steppers' } });
+const socket = io('http://localhost:8081', { extraHeaders: { origin: 'controller-steppers' } });
 
 socket.on('connect', () => {
     console.log('Connected to Socket.IO server');
