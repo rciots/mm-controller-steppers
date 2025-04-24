@@ -27,42 +27,37 @@ setTimeout(() => {
         try {
             let mksporttest = new SerialPort({
                 path: ttyUSB,
-                baudRate: 250000,
-                autoOpen: false
+                baudRate: 250000
             });
 
-            mksporttest.open((err) => {
-                if (err) {
-                    console.log('Port', ttyUSB, 'is busy, trying next device');
-                    console.log('Error:', err.message);
+            mksporttest.on('error', (err) => {
+                console.log('Error on port', ttyUSB, ':', err.message);
+                mksporttest.close();
+            });
+
+            mksporttest.write('0\n');
+
+            let ttyTimeout = setTimeout(() => {
+                console.log('Timeout, closing port:', mksporttest.path);
+                mksporttest.close(); 
+            }, 1000);
+
+            mksporttest.on('data', (data) => {
+                if (data.toString().includes('Unknown command')) {
+                    clearTimeout(ttyTimeout);
+                    console.log('MKS port:', mksporttest.path);
                     mksporttest.close();
-                    return;
-                }
-
-                mksporttest.write('0\n', () => {
-                    let ttyTimeout = setTimeout(() => {
-                        console.log('Timeout, closing port:', mksporttest.path);
-                        mksporttest.close(); 
-                    }, 1000);
-
-                    mksporttest.on('data', (data) => {
-                        if (data.toString().includes('Unknown command')) {
-                            clearTimeout(ttyTimeout);
-                            console.log('MKS port:', mksporttest.path);
-                            mksporttest.close();
-                            mksport = new SerialPort({
-                                path: ttyUSB,
-                                baudRate: 250000
-                            });
-                            startSerial(mksport);
-                        } else {
-                            console.log('Arduino founded, skiping to next device');
-                            console.log("arduino path:", mksporttest.path);
-                            clearTimeout(ttyTimeout);
-                            mksporttest.close(); 
-                        }
+                    mksport = new SerialPort({
+                        path: ttyUSB,
+                        baudRate: 250000
                     });
-                });
+                    startSerial(mksport);
+                } else {
+                    console.log('Arduino founded, skiping to next device');
+                    console.log("arduino path:", mksporttest.path);
+                    clearTimeout(ttyTimeout);
+                    mksporttest.close(); 
+                }
             });
         } catch (err) {
             console.log('Error with port', ttyUSB, ':', err.message);
