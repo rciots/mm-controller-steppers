@@ -47,11 +47,21 @@ setTimeout(() => {
                     clearTimeout(ttyTimeout);
                     console.log('MKS port:', mksporttest.path);
                     mksporttest.close();
-                    mksport = new SerialPort({
-                        path: ttyUSB,
-                        baudRate: 250000
-                    });
-                    startSerial(mksport);
+                    try {
+                        mksport = new SerialPort({
+                            path: ttyUSB,
+                            baudRate: 250000
+                        });
+                        mksport.on('error', (err) => {
+                            console.log('Error on MKS port:', err.message);
+                            if (mksport && mksport.isOpen) {
+                                mksport.close();
+                            }
+                        });
+                        startSerial(mksport);
+                    } catch (err) {
+                        console.log('Error creating MKS port:', err.message);
+                    }
                 } else {
                     console.log('Arduino founded, skiping to next device');
                     console.log("arduino path:", mksporttest.path);
