@@ -64,34 +64,34 @@ setTimeout(() => {
                     
                     if (data.toString().includes('Unknown command')) {
                         console.log('MKS port:', mksporttest.path);
-                        mksporttest.close();
-                        
-                        setTimeout(() => {
-                            try {
-                                mksport = new SerialPort({
-                                    path: ttyUSB,
-                                    baudRate: 250000,
-                                    autoOpen: false
-                                });
-                                
-                                mksport.open((err) => {
-                                    if (err) {
-                                        console.log('Error opening MKS port:', err.message);
-                                        return;
-                                    }
-                                    
-                                    mksport.on('error', (err) => {
-                                        console.log('Error on MKS port:', err.message);
-                                        if (mksport && mksport.isOpen) {
-                                            mksport.close();
-                                        }
+                        mksporttest.close(() => {
+                            setTimeout(() => {
+                                try {
+                                    mksport = new SerialPort({
+                                        path: ttyUSB,
+                                        baudRate: 250000,
+                                        autoOpen: false
                                     });
-                                    startSerial(mksport);
-                                });
-                            } catch (err) {
-                                console.log('Error creating MKS port:', err.message);
-                            }
-                        }, 1000);
+                                    
+                                    mksport.open((err) => {
+                                        if (err) {
+                                            console.log('Error opening MKS port:', err.message);
+                                            return;
+                                        }
+                                        
+                                        mksport.on('error', (err) => {
+                                            console.log('Error on MKS port:', err.message);
+                                            if (mksport && mksport.isOpen) {
+                                                mksport.close();
+                                            }
+                                        });
+                                        startSerial(mksport);
+                                    });
+                                } catch (err) {
+                                    console.log('Error creating MKS port:', err.message);
+                                }
+                            }, 2000);
+                        });
                     } else {
                         console.log('Arduino founded, skiping to next device');
                         console.log("arduino path:", mksporttest.path);
