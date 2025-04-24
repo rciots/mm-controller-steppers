@@ -30,21 +30,30 @@ setTimeout(() => {
                 baudRate: 250000
             });
 
+            let errorHandled = false;
             mksporttest.on('error', (err) => {
-                console.log('Error on port', ttyUSB, ':', err.message);
-                mksporttest.close();
+                if (!errorHandled) {
+                    console.log('Error on port', ttyUSB, ':', err.message);
+                    errorHandled = true;
+                    mksporttest.close();
+                }
             });
+
+            let dataReceived = false;
+            let ttyTimeout = setTimeout(() => {
+                if (!dataReceived) {
+                    console.log('Timeout, closing port:', mksporttest.path);
+                    mksporttest.close();
+                }
+            }, 1000);
 
             mksporttest.write('0\n');
 
-            let ttyTimeout = setTimeout(() => {
-                console.log('Timeout, closing port:', mksporttest.path);
-                mksporttest.close(); 
-            }, 1000);
-
             mksporttest.on('data', (data) => {
+                dataReceived = true;
+                clearTimeout(ttyTimeout);
+                
                 if (data.toString().includes('Unknown command')) {
-                    clearTimeout(ttyTimeout);
                     console.log('MKS port:', mksporttest.path);
                     mksporttest.close();
                     try {
@@ -65,8 +74,7 @@ setTimeout(() => {
                 } else {
                     console.log('Arduino founded, skiping to next device');
                     console.log("arduino path:", mksporttest.path);
-                    clearTimeout(ttyTimeout);
-                    mksporttest.close(); 
+                    mksporttest.close();
                 }
             });
         } catch (err) {
