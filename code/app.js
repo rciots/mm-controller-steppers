@@ -16,9 +16,9 @@ const path = require('path');
 
 // add 5 seconds delay
 setTimeout(() => {
-    const serialDevices = fs.readdirSync('/dev')
-        .filter(file => file.startsWith('ttyUSB'))
-        .map(file => path.join('/dev', file));
+    const serialDevices = fs.readdirSync('/dev/serial/by-id')
+        .filter(file => file.startsWith('usb-1a86_USB_Serial-if00-port0'))
+        .map(file => path.join('/dev/serial/by-id', file));
 
     let ttyUSB = "";
     for (let i = 0; i < serialDevices.length; i++) {
