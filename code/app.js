@@ -14,58 +14,62 @@ const inclination = 4;
 const fs = require('fs');
 const path = require('path');
 
-const serialDevices = fs.readdirSync('/dev')
-    .filter(file => file.startsWith('ttyUSB'))
-    .map(file => path.join('/dev', file));
+// add 5 seconds delay
+setTimeout(() => {
+    const serialDevices = fs.readdirSync('/dev')
+        .filter(file => file.startsWith('ttyUSB'))
+        .map(file => path.join('/dev', file));
 
-let ttyUSB = "";
-for (let i = 0; i < serialDevices.length; i++) {
-    ttyUSB = serialDevices[i];
-    console.log('Path:', ttyUSB);
-    try {
-        let mksporttest = new SerialPort({
-            path: ttyUSB,
-            baudRate: 250000,
-            autoOpen: false
-        });
+    let ttyUSB = "";
+    for (let i = 0; i < serialDevices.length; i++) {
+        ttyUSB = serialDevices[i];
+        console.log('Path:', ttyUSB);
+        try {
+            let mksporttest = new SerialPort({
+                path: ttyUSB,
+                baudRate: 250000,
+                autoOpen: false
+            });
 
-        mksporttest.open((err) => {
-            if (err) {
-                console.log('Port', ttyUSB, 'is busy, trying next device');
-                return;
-            }
+            mksporttest.open((err) => {
+                if (err) {
+                    console.log('Port', ttyUSB, 'is busy, trying next device');
+                    console.log('Error:', err.message);
+                    mksporttest.close();
+                    return;
+                }
 
-            mksporttest.write('0\n', () => {
-                let ttyTimeout = setTimeout(() => {
-                    console.log('Timeout, closing port:', mksporttest.path);
-                    mksporttest.close(); 
-                }, 1000);
-
-                mksporttest.on('data', (data) => {
-                    if (data.toString().includes('Unknown command')) {
-                        clearTimeout(ttyTimeout);
-                        console.log('MKS port:', mksporttest.path);
-                        mksporttest.close();
-                        mksport = new SerialPort({
-                            path: ttyUSB,
-                            baudRate: 250000
-                        });
-                        startSerial(mksport);
-                    } else {
-                        console.log('Arduino founded, skiping to next device');
-                        console.log("arduino path:", mksporttest.path);
-                        clearTimeout(ttyTimeout);
+                mksporttest.write('0\n', () => {
+                    let ttyTimeout = setTimeout(() => {
+                        console.log('Timeout, closing port:', mksporttest.path);
                         mksporttest.close(); 
-                    }
+                    }, 1000);
+
+                    mksporttest.on('data', (data) => {
+                        if (data.toString().includes('Unknown command')) {
+                            clearTimeout(ttyTimeout);
+                            console.log('MKS port:', mksporttest.path);
+                            mksporttest.close();
+                            mksport = new SerialPort({
+                                path: ttyUSB,
+                                baudRate: 250000
+                            });
+                            startSerial(mksport);
+                        } else {
+                            console.log('Arduino founded, skiping to next device');
+                            console.log("arduino path:", mksporttest.path);
+                            clearTimeout(ttyTimeout);
+                            mksporttest.close(); 
+                        }
+                    });
                 });
             });
-        });
-    } catch (err) {
-        console.log('Error with port', ttyUSB, ':', err.message);
-        continue;
+        } catch (err) {
+            console.log('Error with port', ttyUSB, ':', err.message);
+            continue;
+        }
     }
-}
-
+}, 5000);
 function startSerial(mksport) {
     if (mksport) {
         mksport.write('M83\n', (err) => {
