@@ -78,6 +78,7 @@ function startSerial(mksport) {
             }
         });
         setTimeout(() => {
+            console.log('Moving to initial position');
             mksport.write('G0 X13 Y14 Z13\n', (err) => {
                 if (err) {
                     console.error('Error sending G-code:', err.message);
