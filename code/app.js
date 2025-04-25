@@ -4,107 +4,75 @@ var cliport = process.env.CLI_PORT || 8080;
 var connectorsvc= process.env.CONNECTOR_SVC || "mm-ws-connector.mm-ws-connector.svc.cluster.local";
 const socket = io('http://' + connectorsvc + ':' + cliport, { extraHeaders: { origin: 'controller-steppers' } });
 
+const MKS_PATH = process.env.MKS_PATH || '/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0';
+const inclination = 4;
+
 socket.on('connect', () => {
     console.log('Connected to Socket.IO server');
 });
 
 let mksport = null;
-const inclination = 4;
 
-const fs = require('fs');
-const path = require('path');
-
-// add 5 seconds delay
-setTimeout(() => {
-    const serialDevices = fs.readdirSync('/dev/serial/by-id')
-        .filter(file => file.startsWith('usb-1a86_USB_Serial-if00-port0'))
-        .map(file => path.join('/dev/serial/by-id', file));
-
-    let ttyUSB = "";
-    for (let i = 0; i < serialDevices.length; i++) {
-        ttyUSB = serialDevices[i];
-        console.log('Path:', ttyUSB);
-        try {
-            let mksporttest = new SerialPort({
-                path: ttyUSB,
-                baudRate: 250000,
-                autoOpen: false
-            });
-
-            let errorHandled = false;
-            mksporttest.on('error', (err) => {
-                if (!errorHandled) {
-                    console.log('Error on port', ttyUSB, ':', err.message);
-                    errorHandled = true;
-                    if (mksporttest.isOpen) {
-                        mksporttest.close();
-                    }
-                }
-            });
-
-            mksporttest.open((err) => {
-                if (err) {
-                    console.log('Port', ttyUSB, 'is busy, trying next device');
-                    return;
-                }
-
-                let dataReceived = false;
-                let ttyTimeout = setTimeout(() => {
-                    if (!dataReceived) {
-                        console.log('Timeout, closing port:', mksporttest.path);
-                        mksporttest.close();
-                    }
-                }, 1000);
-
-                mksporttest.write('0\n');
-
-                mksporttest.on('data', (data) => {
-                    dataReceived = true;
-                    clearTimeout(ttyTimeout);
-                    
-                    if (data.toString().includes('Unknown command')) {
-                        console.log('MKS port:', mksporttest.path);
-                        mksporttest.close(() => {
-                            setTimeout(() => {
-                                try {
-                                    mksport = new SerialPort({
-                                        path: ttyUSB,
-                                        baudRate: 250000,
-                                        autoOpen: false
-                                    });
-                                    
-                                    mksport.open((err) => {
-                                        if (err) {
-                                            console.log('Error opening MKS port:', err.message);
-                                            return;
-                                        }
-                                        
-                                        mksport.on('error', (err) => {
-                                            console.log('Error on MKS port:', err.message);
-                                            if (mksport && mksport.isOpen) {
-                                                mksport.close();
-                                            }
-                                        });
-                                        startSerial(mksport);
-                                    });
-                                } catch (err) {
-                                    console.log('Error creating MKS port:', err.message);
-                                }
-                            }, 2000);
-                        });
-                    } else {
-                        console.log('Arduino founded, skiping to next device');
-                        console.log("arduino path:", mksporttest.path);
-                        mksporttest.close();
-                    }
-                });
-            });
-        } catch (err) {
-            console.log('Error with port', ttyUSB, ':', err.message);
-            continue;
-        }
+function handleMKSError(err) {
+    console.log('MKS error/disconnection:', err ? err.message : 'Connection lost');
+    if (mksport) {
+        mksport.close();
+        mksport = null;
     }
-}, 5000);
+}
+
+function tryConnectMKS() {
+    if (mksport) {
+        return; // Connection already established
+    }
+
+    console.log('Attempting to connect to MKS...');
+    mksport = new SerialPort({
+        path: MKS_PATH,
+        baudRate: 250000,
+        autoOpen: false
+    });
+
+    mksport.open((err) => {
+        if (err) {
+            handleMKSError(err);
+            return;
+        }
+
+        console.log('Port opened successfully');
+        const parser = mksport.pipe(new ReadlineParser({ delimiter: '\r\n' }));
+        
+        // Connection verification timeout
+        const connectionTimeout = setTimeout(() => {
+            handleMKSError(new Error('Connection timeout'));
+        }, 2000);
+
+        parser.on('data', (data) => {
+            console.log('Received data:', data.toString());
+            if (data.toString().includes('Unknown command')) {
+                clearTimeout(connectionTimeout);
+                console.log('MKS connected successfully');
+                startSerial(mksport);
+            }
+        });
+
+        mksport.write('0\n', (err) => {
+            if (err) {
+                handleMKSError(err);
+            }
+        });
+    });
+
+    mksport.on('error', handleMKSError);
+    mksport.on('close', () => handleMKSError());
+}
+
+// Try to connect every 5 seconds
+setInterval(tryConnectMKS, 5000);
+
+// Try first connection immediately
+tryConnectMKS();
+
 function startSerial(mksport) {
     if (mksport) {
         mksport.write('M83\n', (err) => {
@@ -149,9 +117,7 @@ function startSerial(mksport) {
             } else {
                 moveMotor(mksport, 0);
             }
-    
-        }
-        );
+        });
     }
 }
 
@@ -165,7 +131,6 @@ function moveMotor(mksport, direction) {
 }
 
 function calculateMotorHeights(direction) {
-
     const initialHeight = 13;
     const initialHeightA = 13;
     const initialHeightB = 14;
