@@ -176,7 +176,7 @@ function moveMotor(mksport, direction) {
 function calculateMotorHeights(direction, currentInclination) {
     const initialHeight = 13;
     const initialHeightA = 13;
-    const initialHeightB = 13;
+    const initialHeightB = 14.2;
     const initialHeightC = 13;
 
     const motorPositions = [
