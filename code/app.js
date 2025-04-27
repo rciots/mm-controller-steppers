@@ -105,7 +105,7 @@ function startSerial(mksport) {
             });
         }, 2000);
         socket.on('endgame', () => {
-            mksport.write('G0 E1400 F6000\n', (err) => {
+            mksport.write('G1 E1400 F6000\n', (err) => {
                 if (err) {
                     console.error('Error sending G-code:', err.message);
                 } 
