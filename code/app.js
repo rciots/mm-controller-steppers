@@ -138,36 +138,43 @@ function startSerial(mksport) {
 }
 
 function moveMotor(mksport, direction) {
-    // If direction hasn't changed, don't do anything
     if (direction === currentDirection) {
         return;
     }
 
-    // Clear any existing timeout
     if (movementTimeout) {
         clearTimeout(movementTimeout);
         movementTimeout = null;
     }
 
-    // Store current direction
+    // Definir direcciones compatibles
+    const compatibleDirections = {
+        0: [], 1: [5,6], 2: [7,8], 3: [6,8], 4: [5,7],
+        5: [1,4], 6: [1,3], 7: [2,4], 8: [2,3]
+    };
+
+    const isCompatible = currentDirection !== 0 && 
+                        compatibleDirections[currentDirection].includes(direction);
     currentDirection = direction;
 
-    // First move: half inclination
+    if (isCompatible) {
+        const fullHeights = calculateMotorHeights(direction, inclination);
+        mksport.write(`G0 X${fullHeights.h_A} Y${fullHeights.h_B} Z${fullHeights.h_C}\n`, (err) => {
+            if (err) console.error('Error sending G-code:', err.message);
+        });
+        return;
+    }
+
     const halfHeights = calculateMotorHeights(direction, HALF_INCLINATION);
     mksport.write(`G0 X${halfHeights.h_A} Y${halfHeights.h_B} Z${halfHeights.h_C}\n`, (err) => {
-        if (err) {
-            console.error('Error sending G-code:', err.message);
-        }
+        if (err) console.error('Error sending G-code:', err.message);
     });
 
-    // Set timeout for full movement
     movementTimeout = setTimeout(() => {
-        if (currentDirection === direction) { // Only move if direction hasn't changed
+        if (currentDirection === direction) {
             const fullHeights = calculateMotorHeights(direction, inclination);
             mksport.write(`G0 X${fullHeights.h_A} Y${fullHeights.h_B} Z${fullHeights.h_C}\n`, (err) => {
-                if (err) {
-                    console.error('Error sending G-code:', err.message);
-                }
+                if (err) console.error('Error sending G-code:', err.message);
             });
         }
     }, 500);
