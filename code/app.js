@@ -53,7 +53,7 @@ function tryConnectMKS() {
             handleMKSError(new Error('Connection timeout'));
         }, 5000); // Aumentado a 5 segundos
 
-        parser.on('data', (data) => {
+        mksport.on('data', (data) => {
             console.log('Received data from MKS:', data.toString());
             if (data.toString().includes('Marlin')) {
                 clearTimeout(connectionTimeout);
@@ -88,8 +88,6 @@ function tryConnectMKS() {
 // Try to connect every 10 seconds
 setInterval(tryConnectMKS, 10000);
 
-// Intentar conectar inmediatamente al inicio
-tryConnectMKS();
 
 function startSerial(mksport) {
     if (mksport) {
