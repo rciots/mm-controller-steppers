@@ -136,6 +136,30 @@ function startSerial(mksport) {
                 moveMotor(mksport, 0);
             }
         });
+        socket.on('phase', (data) => {
+            console.log("phase: " + data);
+            if (data === "preStart") {
+                mksport.write('G0 X12 Y12 Z12\n', (err) => {
+                    if (err) console.error('Error sending G-code:', err.message);
+                });
+            } else if (data === "start") {
+                mksport.write('G0 X12 Y12 Z12\n', (err) => {
+                    if (err) console.error('Error sending G-code:', err.message);
+                });
+            } else if (data === "end") {
+                console.log("phase end");
+                calculateMotorHeights(5, inclination);
+                setTimeout(() => {
+                    calculateMotorHeights(1, inclination);
+                    setTimeout(() => {
+                        calculateMotorHeights(4, inclination);
+                        setTimeout(() => {
+                            calculateMotorHeights(5, inclination);
+                        }, 500);
+                    }, 200);
+                }, 600);
+            }
+        });
     }
 }
 
