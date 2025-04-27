@@ -51,13 +51,16 @@ function tryConnectMKS() {
             handleMKSError(new Error('Connection timeout'));
         }, 5000); // Aumentado a 5 segundos
 
-        mksport.on('data', (data) => {
+        const dataHandler = (data) => {
             if (data.toString().includes('Marlin')) {
                 clearTimeout(connectionTimeout);
                 console.log('MKS connected successfully');
+                mksport.removeListener('data', dataHandler); // Dejar de escuchar eventos data
                 startSerial(mksport);
             }
-        });
+        };
+
+        mksport.on('data', dataHandler);
 
         // Enviar comando M115 para obtener información del dispositivo
         mksport.write('M115\n', (err) => {
@@ -95,7 +98,7 @@ function startSerial(mksport) {
         });
         setTimeout(() => {
             console.log('Moving to initial position');
-            mksport.write('G0 X13 Y14 Z13\n', (err) => {
+            mksport.write('G0 X13 Y14.2 Z13\n', (err) => {
                 if (err) {
                     console.error('Error sending G-code:', err.message);
                 }
