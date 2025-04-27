@@ -1,4 +1,5 @@
 const { SerialPort } = require('serialport');
+const { ReadlineParser } = require('@serialport/parser-readline');
 const { io } = require('socket.io-client');
 var cliport = process.env.CLI_PORT || 8080;
 var connectorsvc= process.env.CONNECTOR_SVC || "mm-ws-connector.mm-ws-connector.svc.cluster.local";
