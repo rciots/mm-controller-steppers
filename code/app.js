@@ -1,5 +1,4 @@
 const { SerialPort } = require('serialport');
-const { ReadlineParser } = require('@serialport/parser-readline');
 const { io } = require('socket.io-client');
 var cliport = process.env.CLI_PORT || 8080;
 var connectorsvc= process.env.CONNECTOR_SVC || "mm-ws-connector.mm-ws-connector.svc.cluster.local";
@@ -45,7 +44,6 @@ function tryConnectMKS() {
         }
 
         console.log('Port opened successfully');
-        const parser = mksport.pipe(new ReadlineParser({ delimiter: '\r\n' }));
         
         // Connection verification timeout
         const connectionTimeout = setTimeout(() => {
@@ -54,7 +52,6 @@ function tryConnectMKS() {
         }, 5000); // Aumentado a 5 segundos
 
         mksport.on('data', (data) => {
-            console.log('Received data from MKS:', data.toString());
             if (data.toString().includes('Marlin')) {
                 clearTimeout(connectionTimeout);
                 console.log('MKS connected successfully');
