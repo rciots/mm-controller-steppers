@@ -148,13 +148,25 @@ function startSerial(mksport) {
                 });
             } else if (data === "end") {
                 console.log("phase end");
-                calculateMotorHeights(5, inclination);
+                const fullHeights = calculateMotorHeights(5, inclination);
+                mksport.write(`G0 X${fullHeights.h_A} Y${fullHeights.h_B} Z${fullHeights.h_C}\n`, (err) => {
+                    if (err) console.error('Error sending G-code:', err.message);
+                });
                 setTimeout(() => {
-                    calculateMotorHeights(1, inclination);
+                    const fullHeights = calculateMotorHeights(1, inclination);
+                    mksport.write(`G0 X${fullHeights.h_A} Y${fullHeights.h_B} Z${fullHeights.h_C}\n`, (err) => {
+                        if (err) console.error('Error sending G-code:', err.message);
+                    });
                     setTimeout(() => {
-                        calculateMotorHeights(4, inclination);
+                        const fullHeights = calculateMotorHeights(4, inclination);
+                        mksport.write(`G0 X${fullHeights.h_A} Y${fullHeights.h_B} Z${fullHeights.h_C}\n`, (err) => {
+                            if (err) console.error('Error sending G-code:', err.message);
+                        });
                         setTimeout(() => {
-                            calculateMotorHeights(5, inclination);
+                            const fullHeights = calculateMotorHeights(5, inclination);
+                            mksport.write(`G0 X${fullHeights.h_A} Y${fullHeights.h_B} Z${fullHeights.h_C}\n`, (err) => {
+                                if (err) console.error('Error sending G-code:', err.message);
+                            });
                         }, 500);
                     }, 200);
                 }, 600);
