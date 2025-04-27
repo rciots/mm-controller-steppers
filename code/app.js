@@ -6,12 +6,15 @@ const socket = io('http://' + connectorsvc + ':' + cliport, { extraHeaders: { or
 
 const MKS_PATH = process.env.MKS_PATH || '/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0';
 const inclination = 4;
+const HALF_INCLINATION = inclination / 2;
 
 socket.on('connect', () => {
     console.log('Connected to Socket.IO server');
 });
 
 let mksport = null;
+let currentDirection = 0;
+let movementTimeout = null;
 
 function handleMKSError(err) {
     console.log('MKS error/disconnection:', err ? err.message : 'Connection lost');
@@ -89,7 +92,7 @@ function startSerial(mksport) {
             });
         }, 2000);
         socket.on('endgame', () => {
-            mksport.write('G1 E1400 F6000\n', (err) => {
+            mksport.write('G0 E1400 F6000\n', (err) => {
                 if (err) {
                     console.error('Error sending G-code:', err.message);
                 } 
@@ -122,15 +125,42 @@ function startSerial(mksport) {
 }
 
 function moveMotor(mksport, direction) {
-    const { h_A, h_B, h_C } = calculateMotorHeights(direction);
-    mksport.write(`G0 X${h_A} Y${h_B} Z${h_C}\n`, (err) => {
+    // If direction hasn't changed, don't do anything
+    if (direction === currentDirection) {
+        return;
+    }
+
+    // Clear any existing timeout
+    if (movementTimeout) {
+        clearTimeout(movementTimeout);
+        movementTimeout = null;
+    }
+
+    // Store current direction
+    currentDirection = direction;
+
+    // First move: half inclination
+    const halfHeights = calculateMotorHeights(direction, HALF_INCLINATION);
+    mksport.write(`G0 X${halfHeights.h_A} Y${halfHeights.h_B} Z${halfHeights.h_C}\n`, (err) => {
         if (err) {
             console.error('Error sending G-code:', err.message);
-        } 
+        }
     });
+
+    // Set timeout for full movement
+    movementTimeout = setTimeout(() => {
+        if (currentDirection === direction) { // Only move if direction hasn't changed
+            const fullHeights = calculateMotorHeights(direction, inclination);
+            mksport.write(`G0 X${fullHeights.h_A} Y${fullHeights.h_B} Z${fullHeights.h_C}\n`, (err) => {
+                if (err) {
+                    console.error('Error sending G-code:', err.message);
+                }
+            });
+        }
+    }, 500);
 }
 
-function calculateMotorHeights(direction) {
+function calculateMotorHeights(direction, currentInclination) {
     const initialHeight = 13;
     const initialHeightA = 13;
     const initialHeightB = 14;
@@ -151,35 +181,35 @@ function calculateMotorHeights(direction) {
             break;
         case 1:
             X = 0;
-            Y = -inclination;
+            Y = -currentInclination;
             break;
         case 2:
             X = 0;
-            Y = inclination;
+            Y = currentInclination;
             break;
         case 3: 
-            X = inclination;
+            X = currentInclination;
             Y = 0;
             break;
         case 4:
-            X = -inclination;
+            X = -currentInclination;
             Y = 0;
             break;
         case 5:
-            X = -inclination * Math.cos(Math.PI / 4);
-            Y = -inclination * Math.sin(Math.PI / 4);
+            X = -currentInclination * Math.cos(Math.PI / 4);
+            Y = -currentInclination * Math.sin(Math.PI / 4);
             break;
         case 6:
-            X = inclination * Math.cos(Math.PI / 4);
-            Y = -inclination * Math.sin(Math.PI / 4);
+            X = currentInclination * Math.cos(Math.PI / 4);
+            Y = -currentInclination * Math.sin(Math.PI / 4);
             break;
         case 7:
-            X = -inclination * Math.cos(Math.PI / 4);
-            Y = inclination * Math.sin(Math.PI / 4);
+            X = -currentInclination * Math.cos(Math.PI / 4);
+            Y = currentInclination * Math.sin(Math.PI / 4);
             break;
         case 8:
-            X = inclination * Math.cos(Math.PI / 4);
-            Y = inclination * Math.sin(Math.PI / 4);
+            X = currentInclination * Math.cos(Math.PI / 4);
+            Y = currentInclination * Math.sin(Math.PI / 4);
             break;
         default:
             X = 0;
