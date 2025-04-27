@@ -39,6 +39,7 @@ function tryConnectMKS() {
 
     mksport.open((err) => {
         if (err) {
+            console.error('Error opening port:', err);
             handleMKSError(err);
             return;
         }
@@ -48,33 +49,46 @@ function tryConnectMKS() {
         
         // Connection verification timeout
         const connectionTimeout = setTimeout(() => {
+            console.log('Connection timeout - No response from MKS');
             handleMKSError(new Error('Connection timeout'));
-        }, 2000);
+        }, 5000); // Aumentado a 5 segundos
 
         parser.on('data', (data) => {
-            console.log('Received data:', data.toString());
-            if (data.toString().includes('Unknown command')) {
+            console.log('Received data from MKS:', data.toString());
+            if (data.toString().includes('Marlin')) {
                 clearTimeout(connectionTimeout);
                 console.log('MKS connected successfully');
                 startSerial(mksport);
             }
         });
 
-        mksport.write('0\n', (err) => {
+        // Enviar comando M115 para obtener información del dispositivo
+        mksport.write('M115\n', (err) => {
             if (err) {
+                console.error('Error sending M115 command:', err);
                 handleMKSError(err);
+            } else {
+                console.log('M115 command sent successfully');
             }
         });
-    });
 
-    mksport.on('error', handleMKSError);
-    mksport.on('close', () => handleMKSError());
+        // Configurar eventos de error y cierre
+        mksport.on('error', (err) => {
+            console.error('Serial port error:', err);
+            handleMKSError(err);
+        });
+
+        mksport.on('close', () => {
+            console.log('Serial port closed');
+            handleMKSError();
+        });
+    });
 }
 
-// Try to connect every 5 seconds
-setInterval(tryConnectMKS, 5000);
+// Try to connect every 10 seconds
+setInterval(tryConnectMKS, 10000);
 
-// Try first connection immediately
+// Intentar conectar inmediatamente al inicio
 tryConnectMKS();
 
 function startSerial(mksport) {
