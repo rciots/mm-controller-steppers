@@ -199,12 +199,12 @@ function startSerial(mksport) {
                                             mksport.write('G0 X12 Y12.5 Z12\n', (err) => {
                                                 if (err) console.error('Error sending G-code:', err.message);
                                             });
-                                        }, 1000);
-                                    }, 500);
+                                        }, 4000);
+                                    }, 800);
                                 });
-                            }, 200);
+                            }, 600);
                         });
-                    }, 600);
+                    }, 2000);
                 });
             }
         });
