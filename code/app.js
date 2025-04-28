@@ -105,13 +105,7 @@ function startSerial(mksport) {
             });
         }, 2000);
         socket.on('endgame', (data) => {
-            mksport.write('G1 E1400 F6000\n', (err) => {
-                console.log("endgame: " + data);
-                console.log('G1 E1400 F6000');
-                if (err) {
-                    console.error('Error sending G-code:', err.message);
-                } 
-            });
+
         });
         socket.on('movement', (data) => {
             if (!data.up && !data.down && !data.left && !data.right) {
@@ -154,7 +148,13 @@ function startSerial(mksport) {
                     console.error("MKS port not connected or not open");
                     return;
                 }
-                
+                mksport.write('G1 E1400 F6000\n', (err) => {
+                    console.log("endgame: " + data);
+                    console.log('G1 E1400 F6000');
+                    if (err) {
+                        console.error('Error sending G-code:', err.message);
+                    } 
+                });
                 console.log("Sending first movement command");
                 const fullHeights = calculateMotorHeights(7, inclination);
                 mksport.write(`G0 X${fullHeights.h_A} Y${fullHeights.h_B} Z${fullHeights.h_C}\n`, (err) => {
