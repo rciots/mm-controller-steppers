@@ -212,6 +212,7 @@ function startSerial(mksport) {
 }
 
 function moveMotor(mksport, direction) {
+    console.log("Moving motor to direction: " + direction);
     if (direction === currentDirection) {
         return;
     }
