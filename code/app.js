@@ -98,7 +98,7 @@ function startSerial(mksport) {
         });
         setTimeout(() => {
             console.log('Moving to initial position');
-            mksport.write('G0 X12.5 Y12 Z12\n', (err) => {
+            mksport.write('G0 X12 Y12 Z12.5\n', (err) => {
                 if (err) {
                     console.error('Error sending G-code:', err.message);
                 }
@@ -140,12 +140,12 @@ function startSerial(mksport) {
             console.log("phase: " + data);
             if (data === "preStart") {
                 console.log("Moving to initial position (preStart)");
-                mksport.write('G0 X12 Y12 Z12\n', (err) => {
+                mksport.write('G0 X12 Y12 Z12.5\n', (err) => {
                     if (err) console.error('Error sending G-code:', err.message);
                 });
             } else if (data === "start") {
                 console.log("Moving to initial position (start)");
-                mksport.write('G0 X12 Y12 Z12\n', (err) => {
+                mksport.write('G0 X12 Y12 Z12.5\n', (err) => {
                     if (err) console.error('Error sending G-code:', err.message);
                 });
             } else if (data === "end") {
@@ -250,9 +250,9 @@ function moveMotor(mksport, direction) {
 
 function calculateMotorHeights(direction, currentInclination) {
     const initialHeight = 13;
-    const initialHeightA = 12.5;
+    const initialHeightA = 12;
     const initialHeightB = 12;
-    const initialHeightC = 12;
+    const initialHeightC = 12.5;
 
     const motorPositions = [
         { x: -5, y: -8.66 },
