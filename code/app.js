@@ -194,6 +194,12 @@ function startSerial(mksport) {
                                             }
                                             console.log("Fourth movement command sent successfully");
                                         });
+                                        setTimeout(() => {
+                                            console.log("Sending fifth movement command");
+                                            mksport.write('G0 X12 Y12.5 Z12\n', (err) => {
+                                                if (err) console.error('Error sending G-code:', err.message);
+                                            });
+                                        }, 1000);
                                     }, 500);
                                 });
                             }, 200);
