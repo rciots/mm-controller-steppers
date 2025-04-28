@@ -139,37 +139,67 @@ function startSerial(mksport) {
         socket.on('phase', (data) => {
             console.log("phase: " + data);
             if (data === "preStart") {
+                console.log("Moving to initial position (preStart)");
                 mksport.write('G0 X12 Y12 Z12\n', (err) => {
                     if (err) console.error('Error sending G-code:', err.message);
                 });
             } else if (data === "start") {
+                console.log("Moving to initial position (start)");
                 mksport.write('G0 X12 Y12 Z12\n', (err) => {
                     if (err) console.error('Error sending G-code:', err.message);
                 });
             } else if (data === "end") {
-                console.log("phase end");
+                console.log("phase end - Checking MKS connection");
+                if (!mksport || !mksport.isOpen) {
+                    console.error("MKS port not connected or not open");
+                    return;
+                }
+                
+                console.log("Sending first movement command");
                 const fullHeights = calculateMotorHeights(5, inclination);
                 mksport.write(`G0 X${fullHeights.h_A} Y${fullHeights.h_B} Z${fullHeights.h_C}\n`, (err) => {
-                    if (err) console.error('Error sending G-code:', err.message);
-                });
-                setTimeout(() => {
-                    const fullHeights = calculateMotorHeights(1, inclination);
-                    mksport.write(`G0 X${fullHeights.h_A} Y${fullHeights.h_B} Z${fullHeights.h_C}\n`, (err) => {
-                        if (err) console.error('Error sending G-code:', err.message);
-                    });
+                    if (err) {
+                        console.error('Error sending first G-code:', err.message);
+                        return;
+                    }
+                    console.log("First movement command sent successfully");
+                    
                     setTimeout(() => {
-                        const fullHeights = calculateMotorHeights(4, inclination);
+                        console.log("Sending second movement command");
+                        const fullHeights = calculateMotorHeights(1, inclination);
                         mksport.write(`G0 X${fullHeights.h_A} Y${fullHeights.h_B} Z${fullHeights.h_C}\n`, (err) => {
-                            if (err) console.error('Error sending G-code:', err.message);
+                            if (err) {
+                                console.error('Error sending second G-code:', err.message);
+                                return;
+                            }
+                            console.log("Second movement command sent successfully");
+                            
+                            setTimeout(() => {
+                                console.log("Sending third movement command");
+                                const fullHeights = calculateMotorHeights(4, inclination);
+                                mksport.write(`G0 X${fullHeights.h_A} Y${fullHeights.h_B} Z${fullHeights.h_C}\n`, (err) => {
+                                    if (err) {
+                                        console.error('Error sending third G-code:', err.message);
+                                        return;
+                                    }
+                                    console.log("Third movement command sent successfully");
+                                    
+                                    setTimeout(() => {
+                                        console.log("Sending fourth movement command");
+                                        const fullHeights = calculateMotorHeights(5, inclination);
+                                        mksport.write(`G0 X${fullHeights.h_A} Y${fullHeights.h_B} Z${fullHeights.h_C}\n`, (err) => {
+                                            if (err) {
+                                                console.error('Error sending fourth G-code:', err.message);
+                                                return;
+                                            }
+                                            console.log("Fourth movement command sent successfully");
+                                        });
+                                    }, 500);
+                                });
+                            }, 200);
                         });
-                        setTimeout(() => {
-                            const fullHeights = calculateMotorHeights(5, inclination);
-                            mksport.write(`G0 X${fullHeights.h_A} Y${fullHeights.h_B} Z${fullHeights.h_C}\n`, (err) => {
-                                if (err) console.error('Error sending G-code:', err.message);
-                            });
-                        }, 500);
-                    }, 200);
-                }, 600);
+                    }, 600);
+                });
             }
         });
     }
