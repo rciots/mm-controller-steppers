@@ -156,7 +156,7 @@ function startSerial(mksport) {
                 }
                 
                 console.log("Sending first movement command");
-                const fullHeights = calculateMotorHeights(5, inclination);
+                const fullHeights = calculateMotorHeights(7, inclination);
                 mksport.write(`G0 X${fullHeights.h_A} Y${fullHeights.h_B} Z${fullHeights.h_C}\n`, (err) => {
                     if (err) {
                         console.error('Error sending first G-code:', err.message);
@@ -166,7 +166,7 @@ function startSerial(mksport) {
                     
                     setTimeout(() => {
                         console.log("Sending second movement command");
-                        const fullHeights = calculateMotorHeights(1, inclination);
+                        const fullHeights = calculateMotorHeights(4, inclination);
                         mksport.write(`G0 X${fullHeights.h_A} Y${fullHeights.h_B} Z${fullHeights.h_C}\n`, (err) => {
                             if (err) {
                                 console.error('Error sending second G-code:', err.message);
@@ -176,7 +176,7 @@ function startSerial(mksport) {
                             
                             setTimeout(() => {
                                 console.log("Sending third movement command");
-                                const fullHeights = calculateMotorHeights(4, inclination);
+                                const fullHeights = calculateMotorHeights(2, inclination);
                                 mksport.write(`G0 X${fullHeights.h_A} Y${fullHeights.h_B} Z${fullHeights.h_C}\n`, (err) => {
                                     if (err) {
                                         console.error('Error sending third G-code:', err.message);
@@ -186,7 +186,7 @@ function startSerial(mksport) {
                                     
                                     setTimeout(() => {
                                         console.log("Sending fourth movement command");
-                                        const fullHeights = calculateMotorHeights(5, inclination);
+                                        const fullHeights = calculateMotorHeights(7, inclination);
                                         mksport.write(`G0 X${fullHeights.h_A} Y${fullHeights.h_B} Z${fullHeights.h_C}\n`, (err) => {
                                             if (err) {
                                                 console.error('Error sending fourth G-code:', err.message);
