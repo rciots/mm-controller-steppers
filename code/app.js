@@ -98,7 +98,7 @@ function startSerial(mksport) {
         });
         setTimeout(() => {
             console.log('Moving to initial position');
-            mksport.write('G0 X12.3 Y12.2 Z11.7\n', (err) => {
+            mksport.write('G0 X12.3 Y12 Z11.7\n', (err) => {
                 if (err) {
                     console.error('Error sending G-code:', err.message);
                 }
@@ -134,12 +134,12 @@ function startSerial(mksport) {
             console.log("phase: " + data);
             if (data === "preStart") {
                 console.log("Moving to initial position (preStart)");
-                mksport.write('G0 X12.3 Y12.2 Z11.7\n', (err) => {
+                mksport.write('G0 X12.3 Y12 Z11.7\n', (err) => {
                     if (err) console.error('Error sending G-code:', err.message);
                 });
             } else if (data === "start") {
                 console.log("Moving to initial position (start)");
-                mksport.write('G0 X12.3 Y12.2 Z11.7\n', (err) => {
+                mksport.write('G0 X12.3 Y12 Z11.7\n', (err) => {
                     if (err) console.error('Error sending G-code:', err.message);
                 });
             } else if (data === "end") {
@@ -190,7 +190,7 @@ function startSerial(mksport) {
                                         });
                                         setTimeout(() => {
                                             console.log("Sending fifth movement command");
-                                            mksport.write('G0 X12.3 Y12.2 Z11.7\n', (err) => {
+                                            mksport.write('G0 X12.3 Y12 Z11.7\n', (err) => {
                                                 if (err) console.error('Error sending G-code:', err.message);
                                             });
                                             setTimeout(() => {
@@ -260,7 +260,7 @@ function moveMotor(mksport, direction) {
 function calculateMotorHeights(direction, currentInclination) {
     const initialHeight = 13;
     const initialHeightA = 12.3;
-    const initialHeightB = 12.2;
+    const initialHeightB = 12;
     const initialHeightC = 11.7;
 
     const motorPositions = [
@@ -320,8 +320,8 @@ function calculateMotorHeights(direction, currentInclination) {
     const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
     return {
-        h_A: clamp(h_A, 10, 22),
-        h_B: clamp(h_B, 10, 22),
-        h_C: clamp(h_C, 10, 22)
+        h_A: clamp(h_A, 8, 22),
+        h_B: clamp(h_B, 8, 22),
+        h_C: clamp(h_C, 8, 22)
     };
 }
