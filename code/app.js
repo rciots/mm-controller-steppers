@@ -195,7 +195,7 @@ function startSerial(mksport) {
                                             });
                                             setTimeout(() => {
                                                 console.log("Sending archimedean spiral command");
-                                                mksport.write('G1 E2000 F1000\n', (err) => {
+                                                mksport.write('G1 E2000 F2200\n', (err) => {
                                                     if (err) {
                                                         console.error('Error sending G-code:', err.message);
                                                     } 
