@@ -148,13 +148,7 @@ function startSerial(mksport) {
                     console.error("MKS port not connected or not open");
                     return;
                 }
-                mksport.write('G1 E1400 F6000\n', (err) => {
-                    console.log("endgame: " + data);
-                    console.log('G1 E1400 F6000');
-                    if (err) {
-                        console.error('Error sending G-code:', err.message);
-                    } 
-                });
+
                 console.log("Sending first movement command");
                 const fullHeights = calculateMotorHeights(7, inclination);
                 mksport.write(`G0 X${fullHeights.h_A} Y${fullHeights.h_B} Z${fullHeights.h_C}\n`, (err) => {
@@ -199,6 +193,14 @@ function startSerial(mksport) {
                                             mksport.write('G0 X12 Y12.5 Z12\n', (err) => {
                                                 if (err) console.error('Error sending G-code:', err.message);
                                             });
+                                            setTimeout(() => {
+                                                console.log("Sending archimedean spiral command");
+                                                mksport.write('G1 E2000 F4000\n', (err) => {
+                                                    if (err) {
+                                                        console.error('Error sending G-code:', err.message);
+                                                    } 
+                                                });
+                                            },500);
                                         }, 4000);
                                     }, 800);
                                 });
